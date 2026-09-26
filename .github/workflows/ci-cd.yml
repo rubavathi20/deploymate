@@ -31,8 +31,8 @@ jobs:
         run: |
           python -m py_compile app/app.py
 
-  docker-build:
-    name: Build Docker Image
+  docker-build-push:
+    name: Build and Push Docker Image
     needs: test
     runs-on: ubuntu-latest
 
@@ -40,13 +40,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build Docker image
         run: |
           docker build \
             -f docker/Dockerfile \
-            -t deploymate:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/deploymate:latest \
             .
 
-      - name: Verify Docker image
+      - name: Push Docker image
         run: |
-          docker images deploymate
+          docker push \
+            ${{ secrets.DOCKERHUB_USERNAME }}/deploymate:latest
